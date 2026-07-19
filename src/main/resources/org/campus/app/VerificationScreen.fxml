@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox alignment="CENTER" spacing="15.0" prefHeight="300.0" prefWidth="400.0"
+      xmlns="http://javafx.com/javafx/22" xmlns:fx="http://fxml.com/fxml/1"
+      fx:controller="org.controller.VerificationController">
+
+    <padding>
+        <Insets bottom="30.0" left="40.0" right="40.0" top="30.0" />
+    </padding>
+
+    <Label text="Leave Application Assistant">
+        <font>
+            <Font name="System Bold" size="18.0" />
+        </font>
+    </Label>
+
+    <Label text="Please verify your student identity to proceed" textFill="#666666" />
+
+    <VBox spacing="5.0">
+        <Label text="Student ID" />
+        <TextField fx:id="txtStudentId" promptText="e.g., 0385084" />
+    </VBox>
+
+    <VBox spacing="5.0">
+        <Label text="Full Name" />
+        <TextField fx:id="txtFullName" promptText="e.g., Ryan Chang" />
+    </VBox>
+
+    <Button fx:id="btnVerify" maxWidth="Infinity" onAction="#handleVerification"
+            text="Verify Credentials" style="-fx-background-color: #007AFF; -fx-text-fill: white;">
+        <font>
+            <Font name="System Bold" size="13.0" />
+        </font>
+        <VBox.margin>
+            <Insets top="10.0" />
+        </VBox.margin>
+    </Button>
+</VBox>

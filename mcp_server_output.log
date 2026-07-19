@@ -1,0 +1,27 @@
+Error: LinkageError occurred while loading main class com.campus.mcp.server.CampusMcpServer
+	java.lang.UnsupportedClassVersionError: com/campus/mcp/server/CampusMcpServer has been compiled by a more recent version of the Java Runtime (class file version 69.0), this version of the Java Runtime only recognizes class file versions up to 66.0
+Error: LinkageError occurred while loading main class com.campus.mcp.server.CampusMcpServer
+	java.lang.UnsupportedClassVersionError: com/campus/mcp/server/CampusMcpServer has been compiled by a more recent version of the Java Runtime (class file version 69.0), this version of the Java Runtime only recognizes class file versions up to 66.0
+Error: LinkageError occurred while loading main class com.campus.mcp.server.CampusMcpServer
+	java.lang.UnsupportedClassVersionError: com/campus/mcp/server/CampusMcpServer has been compiled by a more recent version of the Java Runtime (class file version 69.0), this version of the Java Runtime only recognizes class file versions up to 66.0
+Error: LinkageError occurred while loading main class com.campus.mcp.server.CampusMcpServer
+	java.lang.UnsupportedClassVersionError: com/campus/mcp/server/CampusMcpServer has been compiled by a more recent version of the Java Runtime (class file version 69.0), this version of the Java Runtime only recognizes class file versions up to 66.0
+Error: LinkageError occurred while loading main class com.campus.mcp.server.CampusMcpServer
+	java.lang.UnsupportedClassVersionError: com/campus/mcp/server/CampusMcpServer has been compiled by a more recent version of the Java Runtime (class file version 69.0), this version of the Java Runtime only recognizes class file versions up to 66.0
+Error: LinkageError occurred while loading main class com.campus.mcp.server.CampusMcpServer
+	java.lang.UnsupportedClassVersionError: com/campus/mcp/server/CampusMcpServer has been compiled by a more recent version of the Java Runtime (class file version 69.0), this version of the Java Runtime only recognizes class file versions up to 66.0
+Error: LinkageError occurred while loading main class com.campus.mcp.server.CampusMcpServer
+	java.lang.UnsupportedClassVersionError: com/campus/mcp/server/CampusMcpServer has been compiled by a more recent version of the Java Runtime (class file version 69.0), this version of the Java Runtime only recognizes class file versions up to 66.0
+Error: LinkageError occurred while loading main class com.campus.mcp.server.CampusMcpServer
+	java.lang.UnsupportedClassVersionError: com/campus/mcp/server/CampusMcpServer has been compiled by a more recent version of the Java Runtime (class file version 69.0), this version of the Java Runtime only recognizes class file versions up to 66.0
+Error: LinkageError occurred while loading main class com.campus.mcp.server.CampusMcpServer
+	java.lang.UnsupportedClassVersionError: com/campus/mcp/server/CampusMcpServer has been compiled by a more recent version of the Java Runtime (class file version 69.0), this version of the Java Runtime only recognizes class file versions up to 66.0
+21:33:26.822 [main] INFO CampusMcpServer - Campus Information MCP server is running:
+21:33:26.823 [main] INFO CampusMcpServer -   SSE stream     : http://localhost:8080/sse
+21:33:26.823 [main] INFO CampusMcpServer -   Message POST   : http://localhost:8080/mcp/message
+21:33:26.823 [main] INFO CampusMcpServer -   Tools          : search_campus_info, check_room_availability, book_resource,
+21:33:26.823 [main] INFO CampusMcpServer -                    list_lecturer_slots, submit_leave_application
+21:33:26.823 [main] INFO CampusMcpServer -   Resources      : campus://handbook, campus://facilities, campus://faq
+21:33:26.823 [main] INFO CampusMcpServer -   Prompts        : campus_assistant, draft_leave_request
+21:33:26.823 [main] INFO CampusMcpServer - Connect a client to http://localhost:8080
+21:34:00.351 [qtp1816725203-28] INFO McpAsyncServer - Client initialize request - Protocol: 2024-11-05, Capabilities: ClientCapabilities[experimental=null, roots=null, sampling=null, elicitation=null], Info: Implementation[name=JavaFX-Client, title=null, version=1.0.0]

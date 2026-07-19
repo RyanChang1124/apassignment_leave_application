@@ -1,0 +1,3 @@
+[POLICY-01] Medical Leave requires a scanned digital certificate from a registered clinic. Submissions must occur within 48 hours of absence.
+[POLICY-02] Compassionate Leave covers up to 3 consecutive days for immediate family matters. No certificate needed, but program leader approval is mandatory.
+[POLICY-03] Missing an exam due to illness requires an official hospital admission record or a specialized medical report. Standard clinic slips are rejected.
