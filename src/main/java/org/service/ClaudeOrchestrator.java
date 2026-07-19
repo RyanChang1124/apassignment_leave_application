@@ -1,4 +1,5 @@
 package org.service;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.mcp.McpClientService;
 import java.net.URI;
@@ -16,7 +17,7 @@ public class ClaudeOrchestrator {
     private final McpClientService mcpService;
 
     // conversation history
-    private static final List<String> messageHistory = new ArrayList<>();
+    private static final List<String> messageHistory = new CopyOnWriteArrayList<>();
 
     public ClaudeOrchestrator() {
         this.client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
@@ -37,27 +38,44 @@ public class ClaudeOrchestrator {
                 operationalHistory.add("{\"role\":\"assistant\",\"content\":\"I am ready to review your files and policies.\"}");
             }
 
-            String draftingInstruction = "System Action: The user has finalized their application parameters. "
-                    + "Analyze the full chat conversation history above to extract the emotional context, personal situations, "
-                    + "and specific details the student discussed regarding their absence. Synthesize that background "
-                    + "directly with the following application form metrics:\\n"
-                    + "- Applicant Name: " + studentName + "\\n"
-                    + "- Student ID: " + studentId + "\\n"
-                    + "- Leave Type: " + leaveType + "\\n"
-                    + "- Start Date: " + startDate + "\\n"
-                    + "- End Date: " + endDate + "\\n\\n"
-                    + "Task: Write a formal, professional leave request email addressed to the Academic Programme Office. "
-                    + "Incorporate the timeline data and situational context seamlessly. Do not use any generic placeholders or bracketed markers. "
+            // prompt integration
+            // reason is pointed from chat history
+            String contextualReason = "Detailed personal situation discussed in the attached conversation history context.";
+
+            String promptArgs = String.format(
+                    "{\"studentName\":\"%s\",\"fromDate\":\"%s\",\"toDate\":\"%s\",\"reason\":\"%s\"}",
+                    studentName.replace("\"", "\\\""),
+                    startDate,
+                    endDate,
+                    contextualReason.replace("\"", "\\\"")
+            );
+
+            System.out.println("Fetching server prompt template [draft_leave_request]...");
+
+            // invoking prompt from mcp
+            String serverPromptResponse = mcpService.executePromptLookup("draft_leave_request", promptArgs);
+            String serverTemplateText = extractTextFromPromptResponse(serverPromptResponse);
+
+            // generate template
+            String draftingInstruction = "System Action: The user has finalized their application parameters.\n"
+                    + "Base your response text layout on this official server prompt template:\n"
+                    + "\"\"\"\n" + serverTemplateText + "\n\"\"\"\n\n"
+                    + "Additional Parameters:\n"
+                    + "- Student ID: " + studentId + "\n"
+                    + "- Leave Type: " + leaveType + "\n\n"
+                    + "Task: Finalize the formal leave request email addressed to the Academic Programme Office. "
+                    + "Analyze the full chat conversation history above to extract the personal context/situations "
+                    + "and merge them seamlessly into the server template layout. Do not use generic placeholders or bracketed markers. "
                     + "Return ONLY the completed text body of the email. Do not add casual chat commentary before or after the letter.";
 
-            operationalHistory.add("{\"role\":\"user\",\"content\":\"" + draftingInstruction + "\"}");
+            operationalHistory.add("{\"role\":\"user\",\"content\":\"" + draftingInstruction.replace("\"", "\\\"").replace("\n", "\\n") + "\"}");
             String conversationBlocks = String.join(",", operationalHistory);
 
             StringBuilder payloadBuilder = new StringBuilder();
             payloadBuilder.append("{")
                     .append("\"model\":\"claude-haiku-4-5\",")
                     .append("\"max_tokens\":1536,")
-                    .append("\"system\":\"You are a precise, executive administrative assistant. Your sole task is to output the final text of a formal student email draft based on history records. Output nothing else.\",")
+                    .append("\"system\":\"You are a precise, executive administrative assistant. Your sole task is to output the final text of a formal student email draft based on history records and the server template. Output nothing else.\",")
                     .append("\"messages\":[").append(conversationBlocks).append("]");
             payloadBuilder.append("}");
 
@@ -73,7 +91,7 @@ public class ClaudeOrchestrator {
             return parseTextContent(response.body());
 
         } catch (Exception e) {
-            return "Failed to synthesize context document framework: " + e.getMessage();
+            return "Failed to synthesize context document framework via MCP Prompt: " + e.getMessage();
         }
     }
 
@@ -85,14 +103,12 @@ public class ClaudeOrchestrator {
 
         System.out.println("Secure API Key detected! Routing query directly to Claude...");
 
-        // fixed, cleaning for escape sequences
         String escapedQuery = studentQuery
                 .replace("\\", "\\\\")
                 .replace("\"", "\\\"")
                 .replace("\n", "\\n")
                 .replace("\r", "");
 
-        // Append current input frame to global memory state
         messageHistory.add("{\"role\":\"user\",\"content\":\"" + escapedQuery + "\"}");
 
         try {
@@ -100,13 +116,12 @@ public class ClaudeOrchestrator {
 
             StringBuilder payloadBuilder = new StringBuilder();
             payloadBuilder.append("{")
-                    .append("\"model\":\"claude-haiku-4-5\",") //
+                    .append("\"model\":\"claude-haiku-4-5\",")
                     .append("\"max_tokens\":1024,")
                     .append("\"system\":\"You are a helpful campus policy assistant. Whenever a student asks about applying for leave or drafting an application letter, answer their policy questions using your tools, but explicitly remind them to select their 'Type of Leave' and choose their dates on the right-hand panel first, then click 'Pull Template via MCP' to generate their finished draft.\",")
                     .append("\"messages\":[").append(conversationBlocks).append("]");
 
             if (rawToolsJson != null) {
-                // If tools were explicitly loaded by the controller, supply them to Claude
                 payloadBuilder.append(",\"tools\":[{"
                         + "  \"name\":\"search_campus_info\","
                         + "  \"description\":\"Searches the official university campus database for regulations, rooms, or resources.\","
@@ -130,7 +145,6 @@ public class ClaudeOrchestrator {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             String responseBody = response.body();
 
-            // Handle tool orchestration path
             if (responseBody.contains("tool_use")) {
                 System.out.println("🤖 Claude determined tool invocation is required...");
 
@@ -141,25 +155,20 @@ public class ClaudeOrchestrator {
                     toolId = responseBody.substring(idStart, idEnd);
                 }
 
-                // Call local tool synchronously
                 String rawMcpResult = mcpService.executeToolCall("search_campus_info", "{\"query\":\"" + escapedQuery + "\"}");
                 System.out.println("DEBUG - Raw MCP RAG Result contents: " + rawMcpResult);
 
-                // clean context block contents
                 String escapedMcpResult = rawMcpResult
                         .replace("\\", "\\\\")
                         .replace("\"", "\\\"")
                         .replace("\n", "\\n")
                         .replace("\r", "");
 
-                // Commit intent frame back into memory history track
                 messageHistory.add("{\"role\": \"assistant\", \"content\": [{\"type\": \"tool_use\", \"id\": \"" + toolId + "\", \"name\": \"search_campus_info\", \"input\": {\"query\": \"" + escapedQuery + "\"}}]}");
 
-                // Execute final completion turn
                 return sendToolResultWithHistory(toolId, escapedMcpResult);
             }
 
-            // Standard message fallback path
             String cleanResponse = parseTextContent(responseBody);
 
             String escapedResponse = cleanResponse
@@ -213,7 +222,6 @@ public class ClaudeOrchestrator {
         }
     }
 
-    // Parser for text content from Claude responses
     private String parseTextContent(String rawJson) {
         if (!rawJson.contains("\"text\":\"")) {
             return rawJson;
@@ -233,14 +241,12 @@ public class ClaudeOrchestrator {
                     continue;
                 }
 
-                // line break conversion
                 if (current == '\\' && next == 'n') {
                     sb.append('\n');
                     i++;
                     continue;
                 }
 
-                // break on endquote
                 if (current == '"') {
                     break;
                 }
@@ -254,8 +260,21 @@ public class ClaudeOrchestrator {
         }
     }
 
+    // unwrap text from json
+    private String extractTextFromPromptResponse(String responseJson) {
+        if (responseJson == null || responseJson.isBlank()) {
+            return "Draft a short, polite leave-request message to the programme office.";
+        }
+        if (responseJson.contains("\"text\":\"")) {
+            int startIndex = responseJson.indexOf("\"text\":\"") + 8;
+            int endIndex = responseJson.indexOf("\"", startIndex);
+            if (startIndex > 7 && endIndex > startIndex) {
+                return responseJson.substring(startIndex, endIndex);
+            }
+        }
+        return responseJson;
+    }
 
-    // clear conversation to reset
     public static void clearConversationHistory() {
         messageHistory.clear();
     }

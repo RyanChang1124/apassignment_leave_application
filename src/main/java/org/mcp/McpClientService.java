@@ -327,5 +327,19 @@ public class McpClientService {
         }
     }
 
+    public String executePromptLookup(String promptName, String jsonArgs) {
+        try {
+            String payload = String.format(
+                    "{\"jsonrpc\":\"2.0\",\"id\":999,\"method\":\"prompts/get\",\"params\":{\"name\":\"%s\",\"arguments\":%s}}",
+                    promptName,
+                    jsonArgs
+            );
+
+            return payload;
+        } catch (Exception e) {
+            System.err.println("Failed to fetch server prompt: " + e.getMessage());
+            return "";
+        }
+    }
 
 }
